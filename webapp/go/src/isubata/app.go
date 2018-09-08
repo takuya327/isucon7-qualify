@@ -37,8 +37,9 @@ const (
 var (
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
-	Redis = redis.NewClient(&redis.Options {
-		Addr:     isu2 + ":6379",
+
+	RedisClient = redis.NewClient(&redis.Options {
+		Addr: isu2 + ":6379",
 		Password: "", // no password set
 		DB: 0})
 )
@@ -694,9 +695,9 @@ func postProfile(c echo.Context) error {
 func getIcon(c echo.Context) error {
 	var name string
 	var data []byte
-	err := db.QueryRow("SELECT name, data FROM image WHERE name = ?",
-		c.Param("file_name")).Scan(&name, &data)
-	if err == sql.ErrNoRows {
+
+	data, err := RedisClient.Get(c.Param("file_name")).Bytes()
+	if err == redis.Nil {
 		return echo.ErrNotFound
 	}
 	if err != nil {
