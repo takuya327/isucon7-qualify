@@ -696,7 +696,8 @@ func getIcon(c echo.Context) error {
 	var name string
 	var data []byte
 
-	data, err := RedisClient.Get(c.Param("file_name")).Bytes()
+	name = c.Param("file_name")
+	data, err := RedisClient.Get(name).Bytes()
 	if data == nil {
 		return echo.ErrNotFound
 	}
