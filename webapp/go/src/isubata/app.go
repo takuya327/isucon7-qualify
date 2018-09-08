@@ -672,7 +672,7 @@ func postProfile(c echo.Context) error {
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
-		_, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
+		err := RedisClient.Set(avatarName, avatarData, 0).Err()
 		if err != nil {
 			return err
 		}
