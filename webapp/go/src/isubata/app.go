@@ -678,14 +678,14 @@ func postProfile(c echo.Context) error {
 		}
 		_, err = db.Exec("UPDATE user SET avatar_icon = ? WHERE id = ?", avatarName, self.ID)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 	}
 
 	if name := c.FormValue("display_name"); name != "" {
 		_, err := db.Exec("UPDATE user SET display_name = ? WHERE id = ?", name, self.ID)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 	}
 
@@ -696,13 +696,17 @@ func getIcon(c echo.Context) error {
 	var name string
 	var data []byte
 
+	if c.Request().Header.Get(echo.HeaderIfModifiedSince) != "" {
+		return c.NoContent(http.StatusNotModified);
+	}
+
 	name = c.Param("file_name")
 	data, err := RedisClient.Get(name).Bytes()
 	if data == nil {
 		return echo.ErrNotFound
 	}
 	if err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	mime := ""
@@ -716,6 +720,9 @@ func getIcon(c echo.Context) error {
 	default:
 		return echo.ErrNotFound
 	}
+	lastModified := time.Now()
+	c.Response().Header().Set("Cache-Control", "public")
+	c.Response().Header().Set(echo.HeaderLastModified, lastModified.UTC().Format(http.TimeFormat))
 	return c.Blob(http.StatusOK, mime, data)
 }
 
