@@ -1,8 +1,9 @@
 GOPATH := ${PWD}
 export GOPATH
+GO=/home/isucon/local/go/bin/go
 
 build:
-	go build -v isubata
-
+	${GO} build -v isubata
+	sudo systemctl restart isubata.golang.service
 vet:
-	go vet ./src/isubata/...
+	${GO} vet ./src/isubata/...
