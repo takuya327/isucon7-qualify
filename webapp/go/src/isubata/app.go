@@ -23,15 +23,25 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
+	"github.com/go-redis/redis"
 )
 
 const (
 	avatarMaxBytes = 1 * 1024 * 1024
+
+	isu1 = "118.27.1.84"
+	isu2 = "118.27.16.184"
+	isu3 = "118.27.7.176"
 )
 
 var (
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
+
+	RedisClient = redis.NewClient(&redis.Options {
+		Addr: isu2 + ":6379",
+		Password: "", // no password set
+		DB: 0})
 )
 
 type Renderer struct {
@@ -662,7 +672,7 @@ func postProfile(c echo.Context) error {
 	}
 
 	if avatarName != "" && len(avatarData) > 0 {
-		_, err := db.Exec("INSERT INTO image (name, data) VALUES (?, ?)", avatarName, avatarData)
+		err := RedisClient.Set(avatarName, avatarData, 0).Err()
 		if err != nil {
 			return err
 		}
@@ -685,9 +695,9 @@ func postProfile(c echo.Context) error {
 func getIcon(c echo.Context) error {
 	var name string
 	var data []byte
-	err := db.QueryRow("SELECT name, data FROM image WHERE name = ?",
-		c.Param("file_name")).Scan(&name, &data)
-	if err == sql.ErrNoRows {
+
+	data, err := RedisClient.Get(c.Param("file_name")).Bytes()
+	if err == redis.Nil {
 		return echo.ErrNotFound
 	}
 	if err != nil {
