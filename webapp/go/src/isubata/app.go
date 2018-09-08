@@ -674,7 +674,7 @@ func postProfile(c echo.Context) error {
 	if avatarName != "" && len(avatarData) > 0 {
 		err := RedisClient.Set(avatarName, avatarData, 0).Err()
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 		_, err = db.Exec("UPDATE user SET avatar_icon = ? WHERE id = ?", avatarName, self.ID)
 		if err != nil {
