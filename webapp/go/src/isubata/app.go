@@ -23,15 +23,24 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
+	"github.com/go-redis/redis"
 )
 
 const (
 	avatarMaxBytes = 1 * 1024 * 1024
+
+	isu1 = "118.27.1.84"
+	isu2 = "118.27.16.184"
+	isu3 = "118.27.7.176"
 )
 
 var (
 	db            *sqlx.DB
 	ErrBadReqeust = echo.NewHTTPError(http.StatusBadRequest)
+	Redis = redis.NewClient(&redis.Options {
+		Addr:     isu2 + ":6379",
+		Password: "", // no password set
+		DB: 0})
 )
 
 type Renderer struct {
